@@ -1,6 +1,4 @@
-#include <BLEDevice.h>
-#include <BLEUtils.h>
-#include <BLEBeacon.h>
+#include <NimBLEDevice.h>
 #include "esp_sleep.h"
 
 // --- Configuration ---
@@ -23,24 +21,21 @@ void setup() {
     Serial.begin(115200);
 
     // 1. Initialize BLE
-    BLEDevice::init("Halo-Tag");
+    NimBLEDevice::init("Halo-Tag");
 
     // 2. Setup Advertising
-    BLEAdvertising *pAdvertising = BLEDevice::getAdvertising();
-    
+    NimBLEAdvertising *pAdvertising = NimBLEDevice::getAdvertising();
+
     // 3. Create Payload
     halo_adv_data payload;
     payload.company_id = HALO_COMPANY_ID;
     payload.tag_id = HALO_TAG_ID;
-    payload.battery = 100; 
+    payload.battery = 100;
 
     // 4. Set Data
-    BLEAdvertisementData advData;
-    
-    // Cast the struct pointer to char* and provide the exact length to the Arduino String constructor to handle binary data correctly.
-    String strData = String((char*)&payload, sizeof(payload));
-    
-    advData.setManufacturerData(strData);
+    NimBLEAdvertisementData advData;
+    // Pass manufacturer data (company_id through battery) as bytes
+    advData.setManufacturerData((uint8_t*)&payload.company_id, sizeof(payload) - offsetof(halo_adv_data, company_id));
     pAdvertising->setAdvertisementData(advData);
 
     // 5. Start Advertising
