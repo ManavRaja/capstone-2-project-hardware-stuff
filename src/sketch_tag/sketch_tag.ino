@@ -2,7 +2,7 @@
 #include "esp_sleep.h"
 
 // --- Configuration ---
-#define DEEP_SLEEP_TIME_SEC  180ULL  // 3 minutes
+#define DEEP_SLEEP_TIME_SEC  120ULL  // 2 minutes
 #define ADV_DURATION_MS      1500    // 1.5s of advertising
 #define HALO_COMPANY_ID      0xFFFF  // Company ID for manufacturer data
 #define HALO_TAG_ID          1
