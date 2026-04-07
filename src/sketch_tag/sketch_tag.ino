@@ -10,6 +10,9 @@
 // Set to true for development (waits 3 min), false for production (deep sleep)
 #define IS_DEV               true
 
+// Advertising instance ID for extended advertising
+#define ADV_INSTANCE_ID      0
+
 // Manufacturer Data Structure
 struct halo_adv_data {
     uint16_t company_id;
@@ -23,30 +26,33 @@ void setup() {
     // 1. Initialize BLE
     NimBLEDevice::init("Halo-Tag");
 
-    // 2. Setup Advertising
-    NimBLEAdvertising *pAdvertising = NimBLEDevice::getAdvertising();
+    // 2. Setup Extended Advertising (for Coded PHY / Long Range)
+    NimBLEExtAdvertising *pAdvertising = NimBLEDevice::getAdvertising();
 
-    // 3. Create Payload
+    // 3. Create Extended Advertisement with Coded PHY
+    NimBLEExtAdvertisement advData(BLE_HCI_LE_PHY_CODED);
+    advData.setPrimaryPhy(BLE_HCI_LE_PHY_CODED);
+    advData.setSecondaryPhy(BLE_HCI_LE_PHY_CODED);
+
+    // 4. Create Payload
     halo_adv_data payload;
     payload.company_id = HALO_COMPANY_ID;
     payload.tag_id = HALO_TAG_ID;
     payload.battery = 100;
 
-    // 4. Set Data
-    NimBLEAdvertisementData advData;
-    // Pass manufacturer data (company_id through battery) as bytes
-    advData.setManufacturerData((uint8_t*)&payload.company_id, sizeof(payload) - offsetof(halo_adv_data, company_id));
-    pAdvertising->setAdvertisementData(advData);
+    // 5. Set Manufacturer Data
+    advData.setManufacturerData((uint8_t*)&payload, sizeof(payload));
 
-    // 5. Start Advertising
-    pAdvertising->start();
-    Serial.println("Halo Tag Broadcasting (v3.x Core)...");
+    // 6. Set advertisement data for instance 0 and start
+    pAdvertising->setInstanceData(ADV_INSTANCE_ID, advData);
+    pAdvertising->start(ADV_INSTANCE_ID);
+    Serial.println("Halo Tag Broadcasting on Coded PHY (Long Range)...");
 
-    // 6. Wait for Anchor to catch signal
+    // 7. Wait for Anchor to catch signal
     delay(ADV_DURATION_MS);
 
-    // 7. Stop and Sleep
-    pAdvertising->stop();
+    // 8. Stop and Sleep
+    pAdvertising->stop(ADV_INSTANCE_ID);
 
     #if IS_DEV
         Serial.println("DEV MODE: Waiting 3 minutes (no deep sleep)...");
